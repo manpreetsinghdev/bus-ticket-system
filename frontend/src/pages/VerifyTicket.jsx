@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Html5QrcodeScanner } from "html5-qrcode";
-import jsQR from "jsqr";
 
 function VerifyTicket() {
   const [result, setResult] = useState("");
@@ -23,7 +22,7 @@ function VerifyTicket() {
         setResult(decodedText);
 
         const res = await axios.get(
-          `http://localhost:5000/verify/${decodedText}`
+          `https://bus-ticket-system-2.onrender.com/verify/${decodedText}`
         );
 
         setStatus(res.data.status);
@@ -41,10 +40,10 @@ function VerifyTicket() {
   }, [startScan]);
   const handleLogout = () => {
     localStorage.removeItem("role");
-    window.location.href = "/login";
+    window.location.href = "#/login";
   };
   // 📂 Image Upload Scanner
-  const handleImageUpload = (e) => {
+  /*const handleImageUpload = (e) => {
     const file = e.target.files[0];
     const img = new Image();
     const reader = new FileReader();
@@ -80,7 +79,7 @@ function VerifyTicket() {
     };
 
     reader.readAsDataURL(file);
-  };
+  };*/
 
   return (
     <div className="card">
@@ -93,10 +92,9 @@ function VerifyTicket() {
       {/* Camera Scanner */}
       {startScan && <div id="reader" style={{ width: "100%" }}></div>}
 
-      <h3>OR Upload QR Image</h3>
+      {/*<h3>OR Upload QR Image</h3>*/}
 
-      {/* Image Upload */}
-      <input type="file" accept="image/*" onChange={handleImageUpload} />
+      {/*<input type="file" accept="image/*" onChange={handleImageUpload} />*/}
 
       <h3>Scanned ID: {result}</h3>
 

@@ -1,7 +1,12 @@
 import { useState } from "react";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
+
 
 function GenerateTicket() {
+
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     from: "",
     to: "",
@@ -21,17 +26,17 @@ function GenerateTicket() {
   // Dummy fare calculation (for now)
   const getDistance = () => {
     const fakeDistance = Math.floor(Math.random() * 100);
-    const fare = fakeDistance * 1;
+    const fare = fakeDistance * 10;
 
     setForm({ ...form, fare });
   };
   const handleLogout = () => {
-    localStorage.removeItem("role");
-    window.location.href = "/login";
+    sessionStorage.removeItem("role");
+    navigate("/login");     //Check here also
   };
   const handleGenerateAndPrint = async () => {
     try {
-      const res = await axios.post("http://localhost:5000/create-ticket", form);
+      const res = await axios.post("https://bus-ticket-system-2.onrender.com/create-ticket", form);
 
       const qrCode = res.data.qr;
       setQr(qrCode);

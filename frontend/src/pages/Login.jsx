@@ -11,14 +11,22 @@ function Login() {
   const handleLogin = () => {
     // 👨‍✈️ Conductor login
     if (id === "conductor123" && pass === "123") {
-      localStorage.setItem("role", "conductor");
-      window.location.href = "/";
+      sessionStorage.setItem("role", "conductor");
+
+      // 🔥 IMPORTANT (state update trigger)
+      window.dispatchEvent(new Event("storage"));
+
+      navigate("/");
     }
 
     // 🔍 Checker login
     else if (id === "checker123" && pass === "123") {
-      localStorage.setItem("role", "checker");
-      window.location.href =  "/verify";
+      sessionStorage.setItem("role", "checker");
+      
+       // 🔥 IMPORTANT (state update trigger)
+       window.dispatchEvent(new Event("storage"));
+
+      navigate("/verify");
     }
 
     else {

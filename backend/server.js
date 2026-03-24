@@ -9,11 +9,11 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB connect
-mongoose.connect("mongodb://127.0.0.1:27017/busTickets")
-.then(() => console.log("DB connected"))
-.catch(err => console.log(err));
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("MongoDB Connected ✅"))
+.catch(err => console.log("DB Error:", err));
 
-// Ticket Schema
+//  Ticket Schema
 const ticketSchema = new mongoose.Schema({
   ticketId: String,
   from: String,
@@ -25,40 +25,59 @@ const ticketSchema = new mongoose.Schema({
 
 const Ticket = mongoose.model("Ticket", ticketSchema);
 
-// Create Ticket API
+// ✅ Create Ticket API (Error Handling Added)
 app.post("/create-ticket", async (req, res) => {
-  const { from, to, fare, busNo } = req.body;
+  try {
+    const { from, to, fare, busNo } = req.body;
 
-  const ticketId = "TKT" + Date.now();
+    // Validation (important)
+    if (!from || !to || !fare || !busNo) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
 
-  const newTicket = new Ticket({
-    ticketId,
-    from,
-    to,
-    fare,
-    busNo,
-    time: new Date()
-  });
+    const ticketId = "TKT" + Date.now();
 
-  await newTicket.save();
+    const newTicket = new Ticket({
+      ticketId,
+      from,
+      to,
+      fare,
+      busNo,
+      time: new Date()
+    });
 
-  const qr = await QRCode.toDataURL(ticketId);
+    await newTicket.save();
 
-  res.json({ ticketId, qr });
-});
+    const qr = await QRCode.toDataURL(ticketId);
 
-// Verify Ticket API
-app.get("/verify/:id", async (req, res) => {
-  const ticket = await Ticket.findOne({ ticketId: req.params.id });
+    res.status(200).json({ ticketId, qr });
 
-  if (ticket) {
-    res.json({ status: "VALID", ticket });
-  } else {
-    res.json({ status: "INVALID" });
+  } catch (error) {
+    console.log("Create Ticket Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
-// Server start
-app.listen(5000, () => {
-  console.log("Server running on port 5000");
+// ✅ Verify Ticket API (Error Handling Added)
+app.get("/verify/:id", async (req, res) => {
+  try {
+    const ticket = await Ticket.findOne({ ticketId: req.params.id });
+
+    if (ticket) {
+      res.json({ status: "VALID", ticket });
+    } else {
+      res.status(404).json({ status: "INVALID" });
+    }
+
+  } catch (error) {
+    console.log("Verify Error:", error);
+    res.status(500).json({ error: "Server Error" });
+  }
+});
+
+// ✅ Server start
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });

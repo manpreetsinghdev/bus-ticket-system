@@ -15,6 +15,8 @@ app.use(express.json());
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch(err => console.log("DB Error:", err));
+  console.log("EMAIL:", process.env.EMAIL);
+console.log("PASS:", process.env.PASS ? "Loaded ✅" : "Not Loaded ❌");
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -60,8 +62,8 @@ app.post("/create-ticket", async (req, res) => {
     await newTicket.save();
 
     await transporter.sendMail({
-      from: "manpreetsxndhu0005@gmail.com",
-      to: "manpreetsxndhu0005@gmail.com",
+      from: process.env.EMAIL,
+      to: process.env.EMAIL,
       subject: "🚌 New Ticket Generated",
       text: `
 New Ticket Created:

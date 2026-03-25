@@ -2,7 +2,6 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
-
 function GenerateTicket() {
 
   const navigate = useNavigate();
@@ -15,6 +14,7 @@ function GenerateTicket() {
   });
 
   const [qr, setQr] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
     setForm({
@@ -23,25 +23,38 @@ function GenerateTicket() {
     });
   };
 
-  // Dummy fare calculation (for now)
+  // Dummy fare calculation
   const getDistance = () => {
     const fakeDistance = Math.floor(Math.random() * 100);
     const fare = fakeDistance * 10;
 
     setForm({ ...form, fare });
   };
+
   const handleLogout = () => {
     sessionStorage.removeItem("role");
-    navigate("/login");     //Check here also
+    navigate("/login");
   };
+
   const handleGenerateAndPrint = async () => {
+
+    // ✅ Validation
+    if (!form.from || !form.to || !form.fare || !form.busNo) {
+      alert("Please fill all fields");
+      return;
+    }
+
     try {
-      const res = await axios.post("https://bus-ticket-system-2.onrender.com/create-ticket", form);
+      setLoading(true);
+
+      const res = await axios.post(
+        "https://bus-ticket-system-2.onrender.com/create-ticket",
+        form
+      );
 
       const qrCode = res.data.qr;
       setQr(qrCode);
 
-      // 🔥 Print window open
       const printWindow = window.open("", "_blank");
 
       printWindow.document.write(`
@@ -49,12 +62,6 @@ function GenerateTicket() {
       <head>
         <title>Bus Ticket</title>
         <style>
-          @media print {
-            body {
-              margin: 0;
-            }
-          }
-  
           body {
             display: flex;
             justify-content: center;
@@ -63,89 +70,46 @@ function GenerateTicket() {
             margin: 0;
             font-family: monospace;
           }
-  
           .ticket {
             width: 250px;
             border: 2px dashed black;
             padding: 15px;
             text-align: center;
           }
-  
-          h2 {
-            margin: 5px 0;
-          }
-  
-          p {
-            margin: 4px 0;
-          }
-  
-          hr {
-            margin: 8px 0;
-          }
-  
-          img {
-            margin-top: 10px;
-          }
         </style>
       </head>
-  
       <body>
         <div class="ticket">
           <h2>STATE TRANSPORT</h2>
           <hr/>
-  
           <p><b>From:</b> ${form.from}</p>
           <p><b>To:</b> ${form.to}</p>
           <p><b>Fare:</b> ₹${form.fare}</p>
           <p><b>Bus:</b> ${form.busNo}</p>
-  
           <hr/>
-  
           <img src="${qrCode}" width="120"/>
-  
           <p>Valid Ticket</p>
         </div>
-        <script>
-        window.onbeforeunload = function () {
-          window.close();
-        };
-      </script>
       </body>
-    </html>
+      </html>
       `);
 
-
       printWindow.document.close();
+
       setTimeout(() => {
         printWindow.print();
 
-
-        // ✅ print hone ke baad window close
         printWindow.onafterprint = () => {
           printWindow.close();
         };
-        // ✅ Form reset
-        setForm({
-          from: "",
-          to: "",
-          fare: "",
-          busNo: ""
-        });
 
-        // ✅ QR bhi hata do
-        setQr("");
-
-        // 🔥 fallback (agar event na chale)
-        setTimeout(() => {
-          printWindow.close();
-        }, 2000);
-        
-
-      }, 800);
-
+      }, 500);
 
     } catch (err) {
       console.log(err);
+      alert("Something went wrong!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -153,24 +117,50 @@ function GenerateTicket() {
     <div className="card">
       <h2>Generate Ticket</h2>
 
-      <input type="text" name="from" placeholder="From" onChange={handleChange} />
-      <input type="text" name="to" placeholder="To" onChange={handleChange} />
-      <input type="number" name="fare" value={form.fare} readOnly />
-      <input type="text" name="busNo" placeholder="Bus Number" onChange={handleChange} />
+      {/* ✅ Controlled Inputs */}
+      <input 
+        type="text" 
+        name="from" 
+        placeholder="From" 
+        value={form.from}
+        onChange={handleChange} 
+      />
+
+      <input 
+        type="text" 
+        name="to" 
+        placeholder="To" 
+        value={form.to}
+        onChange={handleChange} 
+      />
+
+      <input 
+        type="number" 
+        name="fare" 
+        value={form.fare} 
+        readOnly 
+      />
+
+      <input 
+        type="text" 
+        name="busNo" 
+        placeholder="Bus Number" 
+        value={form.busNo}
+        onChange={handleChange} 
+      />
 
       <button onClick={getDistance}>Calculate Fare</button>
-      <button onClick={handleGenerateAndPrint}>
-        Generate & Print Ticket 🖨️
+
+      <button onClick={handleGenerateAndPrint} disabled={loading}>
+        {loading ? "Generating..." : "Generate & Print Ticket 🖨️"}
       </button>
 
       <button onClick={handleLogout}>Logout 🚪</button>
-
 
       {qr && (
         <div className="qr-box">
           <h3>Your Ticket QR</h3>
           <img src={qr} alt="QR" />
-
         </div>
       )}
     </div>

@@ -5,7 +5,6 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const QRCode = require("qrcode");
 
-
 const app = express();
 
 app.use(cors());
@@ -15,17 +14,21 @@ app.use(express.json());
 mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log("MongoDB Connected ✅"))
   .catch(err => console.log("DB Error:", err));
-  console.log("EMAIL:", process.env.EMAIL);
+
+console.log("EMAIL:", process.env.EMAIL);
 console.log("PASS:", process.env.PASS ? "Loaded ✅" : "Not Loaded ❌");
+
+// Mail transporter
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL,
     pass: process.env.PASS
   }
-  
 });
-  // ✅ YE ALAG SE AAYEGA (IMPORTANT)
+
+// Debug mail
+console.log("Transporter created 🚀");
 transporter.verify((err, success) => {
   if (err) {
     console.log("Mail Error ❌:", err);
@@ -34,8 +37,7 @@ transporter.verify((err, success) => {
   }
 });
 
-
-//  Ticket Schema
+// Ticket Schema
 const ticketSchema = new mongoose.Schema({
   ticketId: String,
   from: String,
@@ -47,12 +49,11 @@ const ticketSchema = new mongoose.Schema({
 
 const Ticket = mongoose.model("Ticket", ticketSchema);
 
-// ✅ Create Ticket API (Error Handling Added)
+// ✅ CREATE TICKET (FIXED)
 app.post("/create-ticket", async (req, res) => {
   try {
     const { from, to, fare, busNo } = req.body;
 
-    // Validation (important)
     if (!from || !to || !fare || !busNo) {
       return res.status(400).json({ error: "All fields are required" });
     }
@@ -70,21 +71,26 @@ app.post("/create-ticket", async (req, res) => {
 
     await newTicket.save();
 
-    await transporter.sendMail({
-      from: process.env.EMAIL,
-      to: process.env.EMAIL,
-      subject: "🚌 New Ticket Generated",
-      text: `
-New Ticket Created:
-
+    // ✅ MAIL SAFE (WILL NOT BREAK API)
+    try {
+      await transporter.sendMail({
+        from: process.env.EMAIL,
+        to: process.env.EMAIL,
+        subject: "🚌 New Ticket Generated",
+        text: `
 From: ${from}
 To: ${to}
 Fare: ₹${fare}
 Bus No: ${busNo}
 Time: ${new Date().toLocaleString()}
 `
-    });
+      });
+      console.log("Mail sent ✅");
+    } catch (mailError) {
+      console.log("Mail failed ❌:", mailError.message);
+    }
 
+    // ✅ ALWAYS SEND RESPONSE
     const qr = await QRCode.toDataURL(ticketId);
 
     res.status(200).json({ ticketId, qr });
@@ -95,7 +101,7 @@ Time: ${new Date().toLocaleString()}
   }
 });
 
-// ✅ Verify Ticket API (Error Handling Added)
+// VERIFY API
 app.get("/verify/:id", async (req, res) => {
   try {
     const ticket = await Ticket.findOne({ ticketId: req.params.id });
@@ -112,7 +118,7 @@ app.get("/verify/:id", async (req, res) => {
   }
 });
 
-// ✅ Server start
+// Server start
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {

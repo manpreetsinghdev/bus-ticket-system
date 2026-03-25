@@ -102,6 +102,10 @@ function GenerateTicket() {
         printWindow.onafterprint = () => {
           printWindow.close();
         };
+        // ⏳ 5 sec baad auto page reload / redirect
+        setTimeout(() => {
+          navigate("/generate"); // ya window.location.reload();
+        }, 5000);
 
       }, 500);
 
@@ -118,35 +122,35 @@ function GenerateTicket() {
       <h2>Generate Ticket</h2>
 
       {/* ✅ Controlled Inputs */}
-      <input 
-        type="text" 
-        name="from" 
-        placeholder="From" 
+      <input
+        type="text"
+        name="from"
+        placeholder="From"
         value={form.from}
-        onChange={handleChange} 
+        onChange={handleChange}
       />
 
-      <input 
-        type="text" 
-        name="to" 
-        placeholder="To" 
+      <input
+        type="text"
+        name="to"
+        placeholder="To"
         value={form.to}
-        onChange={handleChange} 
+        onChange={handleChange}
       />
 
-      <input 
-        type="number" 
-        name="fare" 
-        value={form.fare} 
-        readOnly 
+      <input
+        type="number"
+        name="fare"
+        value={form.fare}
+        readOnly
       />
 
-      <input 
-        type="text" 
-        name="busNo" 
-        placeholder="Bus Number" 
+      <input
+        type="text"
+        name="busNo"
+        placeholder="Bus Number"
         value={form.busNo}
-        onChange={handleChange} 
+        onChange={handleChange}
       />
 
       <button onClick={getDistance}>Calculate Fare</button>
@@ -157,7 +161,7 @@ function GenerateTicket() {
 
       <button onClick={handleLogout}>Logout 🚪</button>
 
-      
+
     </div>
   );
 }

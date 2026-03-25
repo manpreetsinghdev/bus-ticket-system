@@ -1,7 +1,10 @@
+require("dotenv").config();
+const nodemailer = require("nodemailer");
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const QRCode = require("qrcode");
+
 
 const app = express();
 
@@ -10,8 +13,16 @@ app.use(express.json());
 
 // MongoDB connect
 mongoose.connect(process.env.MONGO_URI)
-.then(() => console.log("MongoDB Connected ✅"))
-.catch(err => console.log("DB Error:", err));
+  .then(() => console.log("MongoDB Connected ✅"))
+  .catch(err => console.log("DB Error:", err));
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL,
+    pass: process.env.PASS
+  }
+});
+
 
 //  Ticket Schema
 const ticketSchema = new mongoose.Schema({
@@ -47,6 +58,21 @@ app.post("/create-ticket", async (req, res) => {
     });
 
     await newTicket.save();
+
+    await transporter.sendMail({
+      from: "manpreetsxndhu0005@gmail.com",
+      to: "manpreetsxndhu0005@gmail.com",
+      subject: "🚌 New Ticket Generated",
+      text: `
+New Ticket Created:
+
+From: ${from}
+To: ${to}
+Fare: ₹${fare}
+Bus No: ${busNo}
+Time: ${new Date().toLocaleString()}
+`
+    });
 
     const qr = await QRCode.toDataURL(ticketId);
 

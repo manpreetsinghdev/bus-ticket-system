@@ -102,10 +102,7 @@ function GenerateTicket() {
         printWindow.onafterprint = () => {
           printWindow.close();
         };
-        // ⏳ 5 sec baad auto page reload / redirect
-        setTimeout(() => {
-          navigate("/generate"); // ya window.location.reload();
-        }, 5000);
+        
 
       }, 500);
 

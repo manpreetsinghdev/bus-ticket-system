@@ -27,15 +27,10 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Debug mail
 console.log("Transporter created 🚀");
-transporter.verify((err, success) => {
-  if (err) {
-    console.log("Mail Error ❌:", err);
-  } else {
-    console.log("Mail server ready ✅");
-  }
-});
+
+// ❌ REMOVE verify (timeout issue deta hai)
+// transporter.verify(...)
 
 // Ticket Schema
 const ticketSchema = new mongoose.Schema({
@@ -49,7 +44,7 @@ const ticketSchema = new mongoose.Schema({
 
 const Ticket = mongoose.model("Ticket", ticketSchema);
 
-// ✅ CREATE TICKET (FIXED)
+// ✅ CREATE TICKET (FINAL FIX)
 app.post("/create-ticket", async (req, res) => {
   try {
     const { from, to, fare, busNo } = req.body;
@@ -71,9 +66,9 @@ app.post("/create-ticket", async (req, res) => {
 
     await newTicket.save();
 
-    // ✅ MAIL SAFE (WILL NOT BREAK API)
-    try {
-      await transporter.sendMail({
+    // 🔥 NON-BLOCKING + TIMEOUT SAFE MAIL
+    setTimeout(() => {
+      transporter.sendMail({
         from: process.env.EMAIL,
         to: process.env.EMAIL,
         subject: "🚌 New Ticket Generated",
@@ -84,20 +79,19 @@ Fare: ₹${fare}
 Bus No: ${busNo}
 Time: ${new Date().toLocaleString()}
 `
-      });
-      console.log("Mail sent ✅");
-    } catch (mailError) {
-      console.log("Mail failed ❌:", mailError.message);
-    }
+      })
+      .then(() => console.log("Mail sent ✅"))
+      .catch(err => console.log("Mail failed ❌:", err.message));
+    }, 0);
 
-    // ✅ ALWAYS SEND RESPONSE
+    // ✅ FAST RESPONSE
     const qr = await QRCode.toDataURL(ticketId);
 
-    res.status(200).json({ ticketId, qr });
+    return res.status(200).json({ ticketId, qr });
 
   } catch (error) {
-    console.log("Create Ticket Error:", error);
-    res.status(500).json({ error: "Internal Server Error" });
+    console.log("Create Ticket Error ❌:", error.message);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
@@ -107,14 +101,14 @@ app.get("/verify/:id", async (req, res) => {
     const ticket = await Ticket.findOne({ ticketId: req.params.id });
 
     if (ticket) {
-      res.json({ status: "VALID", ticket });
+      return res.json({ status: "VALID", ticket });
     } else {
-      res.status(404).json({ status: "INVALID" });
+      return res.status(404).json({ status: "INVALID" });
     }
 
   } catch (error) {
-    console.log("Verify Error:", error);
-    res.status(500).json({ error: "Server Error" });
+    console.log("Verify Error ❌:", error.message);
+    return res.status(500).json({ error: "Server Error" });
   }
 });
 

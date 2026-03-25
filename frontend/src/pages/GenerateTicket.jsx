@@ -157,12 +157,7 @@ function GenerateTicket() {
 
       <button onClick={handleLogout}>Logout 🚪</button>
 
-      {qr && (
-        <div className="qr-box">
-          <h3>Your Ticket QR</h3>
-          <img src={qr} alt="QR" />
-        </div>
-      )}
+      
     </div>
   );
 }

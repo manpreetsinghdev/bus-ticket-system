@@ -23,6 +23,15 @@ const transporter = nodemailer.createTransport({
     user: process.env.EMAIL,
     pass: process.env.PASS
   }
+  
+});
+  // ✅ YE ALAG SE AAYEGA (IMPORTANT)
+transporter.verify((err, success) => {
+  if (err) {
+    console.log("Mail Error ❌:", err);
+  } else {
+    console.log("Mail server ready ✅");
+  }
 });
 
 
